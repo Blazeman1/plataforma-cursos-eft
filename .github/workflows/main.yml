@@ -61,16 +61,27 @@ jobs:
     steps:
       - name: Desplegar y verificar en EC2
         uses: appleboy/ssh-action@v1.0.3
+        env:
+          DOCKER_IMAGE: ${{ secrets.DOCKERHUB_USERNAME }}/plataforma-cursos:latest
+          AWS_S3_BUCKET: ${{ secrets.AWS_S3_BUCKET_CURSOS }}
+          AWS_REGION: ${{ secrets.AWS_REGION }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_SESSION_TOKEN: ${{ secrets.AWS_SESSION_TOKEN }}
+          AZURE_JWKS: ${{ secrets.AZURE_AD_B2C_JWKS_URI }}
+          AZURE_ISSUER: ${{ secrets.AZURE_AD_B2C_ISSUER_URI }}
+          DOCKERHUB_USER: ${{ secrets.DOCKERHUB_USERNAME }}
+          DOCKERHUB_PASS: ${{ secrets.DOCKERHUB_TOKEN }}
         with:
           host: ${{ secrets.EC2_CURSOS_HOST }}
           username: ${{ secrets.EC2_CURSOS_USER }}
           key: ${{ secrets.EC2_CURSOS_SSH_KEY }}
           command_timeout: 300s
+          envs: DOCKER_IMAGE,AWS_S3_BUCKET,AWS_REGION,AWS_ACCESS_KEY_ID,AWS_SECRET_ACCESS_KEY,AWS_SESSION_TOKEN,AZURE_JWKS,AZURE_ISSUER,DOCKERHUB_USER,DOCKERHUB_PASS
           script: |
             set -e
 
-            echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login \
-              -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
+            echo "$DOCKERHUB_PASS" | docker login -u "$DOCKERHUB_USER" --password-stdin
 
             echo "=== Creando red Docker ==="
             docker network create cursos-network 2>/dev/null || echo "Red ya existe"
@@ -98,8 +109,8 @@ jobs:
             docker stop plataforma-cursos 2>/dev/null || true
             docker rm plataforma-cursos 2>/dev/null || true
 
-            echo "=== Descargando imagen ==="
-            docker pull ${{ secrets.DOCKERHUB_USERNAME }}/plataforma-cursos:latest
+            echo "=== Descargando imagen: $DOCKER_IMAGE ==="
+            docker pull "$DOCKER_IMAGE"
 
             echo "=== Levantando Spring Boot ==="
             docker run -d \
@@ -107,18 +118,18 @@ jobs:
               --restart unless-stopped \
               --network cursos-network \
               -p 8081:8080 \
-              -e AWS_S3_BUCKET=${{ secrets.AWS_S3_BUCKET_CURSOS }} \
-              -e AWS_REGION=${{ secrets.AWS_REGION }} \
-              -e AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }} \
-              -e AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }} \
-              -e AWS_SESSION_TOKEN=${{ secrets.AWS_SESSION_TOKEN }} \
-              -e AZURE_AD_B2C_JWKS_URI=${{ secrets.AZURE_AD_B2C_JWKS_URI }} \
-              -e AZURE_AD_B2C_ISSUER_URI=${{ secrets.AZURE_AD_B2C_ISSUER_URI }} \
+              -e AWS_S3_BUCKET="$AWS_S3_BUCKET" \
+              -e AWS_REGION="$AWS_REGION" \
+              -e AWS_ACCESS_KEY_ID="$AWS_ACCESS_KEY_ID" \
+              -e AWS_SECRET_ACCESS_KEY="$AWS_SECRET_ACCESS_KEY" \
+              -e AWS_SESSION_TOKEN="$AWS_SESSION_TOKEN" \
+              -e AZURE_AD_B2C_JWKS_URI="$AZURE_JWKS" \
+              -e AZURE_AD_B2C_ISSUER_URI="$AZURE_ISSUER" \
               -e RABBITMQ_HOST=rabbitmq-cursos \
               -e RABBITMQ_PORT=5672 \
               -e RABBITMQ_USER=guest \
               -e RABBITMQ_PASS=guest \
-              ${{ secrets.DOCKERHUB_USERNAME }}/plataforma-cursos:latest
+              "$DOCKER_IMAGE"
 
             echo "=== Esperando startup (60s) ==="
             sleep 60
