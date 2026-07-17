@@ -31,21 +31,21 @@ public class CursoService {
      * Criterio 1 + 2: Crea la guía, genera el PDF, lo guarda en EFS y lo sube a S3.
      */
     @Transactional
-    public CursoDTO.GuiaResponse crearYSubirGuia(CursoDTO.CrearGuiaRequest request) throws IOException {
+    public CursoDTO.CursoResponse crearYSubirGuia(CursoDTO.CrearCursoRequest request) throws IOException {
         // Generar número único
         String codigoCurso = "CURSO-" + LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"))
                 + "-" + UUID.randomUUID().toString().substring(0, 6).toUpperCase();
 
         // Crear entidad
         Curso guia = new Curso();
-        guia.setNumeroGuia(codigoCurso);
-        guia.setTransportista(request.getTransportista());
-        guia.setDestinatario(request.getDestinatario());
-        guia.setDireccionDestino(request.getDireccionDestino());
-        guia.setDescripcionCarga(request.getDescripcionCarga());
-        guia.setPesoKg(request.getPesoKg());
-        guia.setFechaDespacho(request.getFechaDespacho());
-        guia.setEstado(Curso.EstadoGuia.PENDIENTE);
+        guia.setCodigoCurso(codigoCurso);
+        guia.setInstructor(request.getInstructor());
+        guia.setEstudiante(request.getEstudiante());
+        guia.setTematica(request.getTematica());
+        guia.setDescripcion(request.getDescripcion());
+        guia.setDuracionHoras(request.getDuracionHoras());
+        guia.setFechaInicio(request.getFechaInicio());
+        guia.setEstado(Curso.EstadoCurso.PENDIENTE);
         guia = repository.save(guia);
 
         // Generar PDF
@@ -53,22 +53,22 @@ public class CursoService {
 
         // Guardar en EFS (almacenamiento temporal)
         efsService.efsDisponible(); // Verifica/crea directorio base
-        String rutaEfs = efsService.guardarEnEfs(pdfBytes, request.getTransportista(), codigoCurso);
+        String rutaEfs = efsService.guardarEnEfs(pdfBytes, request.getInstructor(), codigoCurso);
         guia.setRutaEfs(rutaEfs);
-        guia.setEstado(Curso.EstadoGuia.GENERADA);
+        guia.setEstado(Curso.EstadoCurso.GENERADA);
 
         // Subir a S3 con carpetas por fecha/instructor
         String claveS3 = s3Service.construirClaveS3(
-                request.getFechaDespacho(), request.getTransportista(), codigoCurso);
+                request.getFechaInicio(), request.getInstructor(), codigoCurso);
         s3Service.subirArchivo(pdfBytes, claveS3);
         guia.setClaveS3(claveS3);
-        guia.setEstado(Curso.EstadoGuia.SUBIDA_S3);
+        guia.setEstado(Curso.EstadoCurso.SUBIDA_S3);
 
         guia = repository.save(guia);
         // Semana 8: enviar guía a la Cola 1 (cursos-cola-inscripciones) para procesamiento asíncrono
         productorGuiasService.enviarGuia(guia);
         log.info("Guía creada y subida a S3: {} -> {}", codigoCurso, claveS3);
-        return CursoDTO.GuiaResponse.from(guia);
+        return CursoDTO.CursoResponse.from(guia);
     }
 
     /**
@@ -86,15 +86,15 @@ public class CursoService {
      * Criterio 3: Modifica los datos de la guía y actualiza el archivo en S3.
      */
     @Transactional
-    public CursoDTO.GuiaResponse actualizarGuia(String codigoCurso, CursoDTO.ActualizarGuiaRequest request) throws IOException {
+    public CursoDTO.CursoResponse actualizarGuia(String codigoCurso, CursoDTO.ActualizarCursoRequest request) throws IOException {
         Curso guia = obtenerPorNumero(codigoCurso);
 
         // Actualizar campos si vienen en el request
-        if (request.getDestinatario() != null)    guia.setDestinatario(request.getDestinatario());
-        if (request.getDireccionDestino() != null) guia.setDireccionDestino(request.getDireccionDestino());
-        if (request.getDescripcionCarga() != null) guia.setDescripcionCarga(request.getDescripcionCarga());
-        if (request.getPesoKg() != null)           guia.setPesoKg(request.getPesoKg());
-        if (request.getFechaDespacho() != null)    guia.setFechaDespacho(request.getFechaDespacho());
+        if (request.getEstudiante() != null)    guia.setEstudiante(request.getEstudiante());
+        if (request.getTematica() != null) guia.setTematica(request.getTematica());
+        if (request.getDescripcion() != null) guia.setDescripcion(request.getDescripcion());
+        if (request.getDuracionHoras() != null)           guia.setDuracionHoras(request.getDuracionHoras());
+        if (request.getFechaInicio() != null)    guia.setFechaInicio(request.getFechaInicio());
         if (request.getEstado() != null)           guia.setEstado(request.getEstado());
 
         guia = repository.save(guia);
@@ -104,7 +104,7 @@ public class CursoService {
 
         // Actualizar en EFS si existe
         if (guia.getRutaEfs() != null) {
-            efsService.guardarEnEfs(pdfActualizado, guia.getTransportista(), guia.getNumeroGuia());
+            efsService.guardarEnEfs(pdfActualizado, guia.getInstructor(), guia.getCodigoCurso());
         }
 
         // Actualizar en S3 (sobreescribe el objeto existente)
@@ -113,7 +113,7 @@ public class CursoService {
         }
 
         log.info("Guía actualizada: {}", codigoCurso);
-        return CursoDTO.GuiaResponse.from(guia);
+        return CursoDTO.CursoResponse.from(guia);
     }
 
     /**
@@ -140,7 +140,7 @@ public class CursoService {
     /**
      * Criterio 5: Consulta historial por instructor y/o fecha.
      */
-    public List<CursoDTO.GuiaResponse> consultarHistorial(String instructor, LocalDate fecha) {
+    public List<CursoDTO.CursoResponse> consultarHistorial(String instructor, LocalDate fecha) {
         List<Curso> guias;
 
         if (instructor != null && fecha != null) {
@@ -154,15 +154,15 @@ public class CursoService {
         }
 
         return guias.stream()
-                .map(CursoDTO.GuiaResponse::from)
+                .map(CursoDTO.CursoResponse::from)
                 .collect(Collectors.toList());
     }
 
     /**
      * Obtiene una guía por su número.
      */
-    public CursoDTO.GuiaResponse obtenerGuia(String codigoCurso) {
-        return CursoDTO.GuiaResponse.from(obtenerPorNumero(codigoCurso));
+    public CursoDTO.CursoResponse obtenerGuia(String codigoCurso) {
+        return CursoDTO.CursoResponse.from(obtenerPorNumero(codigoCurso));
     }
 
     private Curso obtenerPorNumero(String codigoCurso) {

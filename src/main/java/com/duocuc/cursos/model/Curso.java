@@ -40,7 +40,7 @@ public class Curso {
     private LocalDate fechaInicio;
 
     @Enumerated(EnumType.STRING)
-    private EstadoGuia estado;
+    private EstadoCurso estado;
 
     // Rutas de almacenamiento
     private String rutaEfs;      // Ruta temporal en EFS
@@ -53,7 +53,7 @@ public class Curso {
     protected void onCreate() {
         fechaCreacion = LocalDateTime.now();
         fechaActualizacion = LocalDateTime.now();
-        if (estado == null) estado = EstadoGuia.PENDIENTE;
+        if (estado == null) estado = EstadoCurso.PENDIENTE;
     }
 
     @PreUpdate
@@ -61,7 +61,7 @@ public class Curso {
         fechaActualizacion = LocalDateTime.now();
     }
 
-    public enum EstadoGuia {
+    public enum EstadoCurso {
         PENDIENTE, GENERADA, SUBIDA_S3, ENTREGADA, CANCELADA
     }
 }

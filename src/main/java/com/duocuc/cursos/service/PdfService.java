@@ -64,9 +64,9 @@ public class PdfService {
                 .setWidth(UnitValue.createPercentValue(100))
                 .setMarginBottom(20);
 
-        agregarFila(tablaInfo, "N° de Guía:", guia.getNumeroGuia(), true);
-        agregarFila(tablaInfo, "Fecha de Despacho:", guia.getFechaDespacho().format(FORMATTER), false);
-        agregarFila(tablaInfo, "Transportista:", guia.getTransportista(), true);
+        agregarFila(tablaInfo, "Código de Curso:", guia.getCodigoCurso(), true);
+        agregarFila(tablaInfo, "Fecha de Inicio:", guia.getFechaInicio().format(FORMATTER), false);
+        agregarFila(tablaInfo, "Instructor:", guia.getInstructor(), true);
         agregarFila(tablaInfo, "Estado:", guia.getEstado().name(), false);
 
         document.add(tablaInfo);
@@ -83,8 +83,8 @@ public class PdfService {
                 .setWidth(UnitValue.createPercentValue(100))
                 .setMarginBottom(20);
 
-        agregarFila(tablaDestino, "Destinatario:", guia.getDestinatario(), true);
-        agregarFila(tablaDestino, "Dirección:", guia.getDireccionDestino(), false);
+        agregarFila(tablaDestino, "Estudiante:", guia.getEstudiante(), true);
+        agregarFila(tablaDestino, "Temática:", guia.getTematica(), false);
 
         document.add(tablaDestino);
 
@@ -100,9 +100,9 @@ public class PdfService {
                 .setWidth(UnitValue.createPercentValue(100))
                 .setMarginBottom(30);
 
-        agregarFila(tablaCarga, "Descripción:", guia.getDescripcionCarga(), true);
+        agregarFila(tablaCarga, "Descripción:", guia.getDescripcion(), true);
         agregarFila(tablaCarga, "Peso (kg):",
-                guia.getPesoKg() != null ? guia.getPesoKg().toString() : "No especificado", false);
+                guia.getDuracionHoras() != null ? guia.getDuracionHoras().toString() : "No especificado", false);
 
         document.add(tablaCarga);
 
@@ -114,13 +114,13 @@ public class PdfService {
         Cell firmaTransportista = new Cell()
                 .add(new Paragraph("\n\n___________________________").setTextAlignment(TextAlignment.CENTER))
                 .add(new Paragraph("Firma Transportista").setTextAlignment(TextAlignment.CENTER).setFontSize(10))
-                .add(new Paragraph(guia.getTransportista()).setTextAlignment(TextAlignment.CENTER).setFontSize(9).setFontColor(ColorConstants.GRAY))
+                .add(new Paragraph(guia.getInstructor()).setTextAlignment(TextAlignment.CENTER).setFontSize(9).setFontColor(ColorConstants.GRAY))
                 .setBorder(Border.NO_BORDER);
 
         Cell firmaDestinatario = new Cell()
                 .add(new Paragraph("\n\n___________________________").setTextAlignment(TextAlignment.CENTER))
                 .add(new Paragraph("Firma Destinatario").setTextAlignment(TextAlignment.CENTER).setFontSize(10))
-                .add(new Paragraph(guia.getDestinatario()).setTextAlignment(TextAlignment.CENTER).setFontSize(9).setFontColor(ColorConstants.GRAY))
+                .add(new Paragraph(guia.getEstudiante()).setTextAlignment(TextAlignment.CENTER).setFontSize(9).setFontColor(ColorConstants.GRAY))
                 .setBorder(Border.NO_BORDER);
 
         tablaFirmas.addCell(firmaTransportista);
@@ -136,7 +136,7 @@ public class PdfService {
                 .setMarginTop(30));
 
         document.close();
-        log.info("PDF generado para guía: {}", guia.getNumeroGuia());
+        log.info("PDF generado para curso: {}", guia.getCodigoCurso());
         return baos.toByteArray();
     }
 

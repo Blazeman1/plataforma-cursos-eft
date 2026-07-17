@@ -36,19 +36,19 @@ public class ProductorCursosService {
      */
     public void enviarGuia(Curso guia) {
         Map<String, Object> mensaje = new HashMap<>();
-        mensaje.put("codigoCurso",       guia.getNumeroGuia());
-        mensaje.put("instructor",    guia.getTransportista());
-        mensaje.put("estudiante",     guia.getDestinatario());
-        mensaje.put("tematica", guia.getDireccionDestino());
-        mensaje.put("descripcion", guia.getDescripcionCarga());
-        mensaje.put("duracionHoras",           guia.getPesoKg());
-        mensaje.put("fechaInicio",    guia.getFechaDespacho() != null
-                ? guia.getFechaDespacho().toString() : null);
+        mensaje.put("codigoCurso",       guia.getCodigoCurso());
+        mensaje.put("instructor",    guia.getInstructor());
+        mensaje.put("estudiante",     guia.getEstudiante());
+        mensaje.put("tematica", guia.getTematica());
+        mensaje.put("descripcion", guia.getDescripcion());
+        mensaje.put("duracionHoras",           guia.getDuracionHoras());
+        mensaje.put("fechaInicio",    guia.getFechaInicio() != null
+                ? guia.getFechaInicio().toString() : null);
         mensaje.put("claveS3",          guia.getClaveS3());
         mensaje.put("estado",           guia.getEstado() != null
                 ? guia.getEstado().name() : null);
 
-        log.info("Enviando guía {} a la cola {}", guia.getNumeroGuia(), RabbitMQConfig.COLA_PRINCIPAL);
+        log.info("Enviando curso {} a la cola {}", guia.getCodigoCurso(), RabbitMQConfig.COLA_PRINCIPAL);
 
         rabbitTemplate.convertAndSend(
                 RabbitMQConfig.EXCHANGE_PRINCIPAL,
@@ -57,6 +57,6 @@ public class ProductorCursosService {
         );
 
         log.info("Guía {} enviada exitosamente a cursos-exchange -> cursos-cola-inscripciones",
-                guia.getNumeroGuia());
+                guia.getCodigoCurso());
     }
 }

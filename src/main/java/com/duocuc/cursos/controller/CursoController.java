@@ -29,9 +29,9 @@ public class CursoController {
      * Criterios 1 + 2: Crea la guía, la guarda en EFS y la sube automáticamente a S3.
      */
     @PostMapping
-    public ResponseEntity<CursoDTO.GuiaResponse> crearGuia(
-            @Valid @RequestBody CursoDTO.CrearGuiaRequest request) throws IOException {
-        CursoDTO.GuiaResponse response = service.crearYSubirGuia(request);
+    public ResponseEntity<CursoDTO.CursoResponse> crearGuia(
+            @Valid @RequestBody CursoDTO.CrearCursoRequest request) throws IOException {
+        CursoDTO.CursoResponse response = service.crearYSubirGuia(request);
         return ResponseEntity.status(201).body(response);
     }
 
@@ -40,7 +40,7 @@ public class CursoController {
      * Obtiene los metadatos de una guía específica.
      */
     @GetMapping("/{codigoCurso}")
-    public ResponseEntity<CursoDTO.GuiaResponse> obtenerGuia(
+    public ResponseEntity<CursoDTO.CursoResponse> obtenerGuia(
             @PathVariable String codigoCurso) {
         return ResponseEntity.ok(service.obtenerGuia(codigoCurso));
     }
@@ -69,9 +69,9 @@ public class CursoController {
      * Criterio 3: Modifica la guía y actualiza el PDF en S3.
      */
     @PutMapping("/{codigoCurso}")
-    public ResponseEntity<CursoDTO.GuiaResponse> actualizarGuia(
+    public ResponseEntity<CursoDTO.CursoResponse> actualizarGuia(
             @PathVariable String codigoCurso,
-            @RequestBody CursoDTO.ActualizarGuiaRequest request) throws IOException {
+            @RequestBody CursoDTO.ActualizarCursoRequest request) throws IOException {
         return ResponseEntity.ok(service.actualizarGuia(codigoCurso, request));
     }
 
@@ -100,11 +100,11 @@ public class CursoController {
      *   GET /api/cursos/historial  (retorna todas)
      */
     @GetMapping("/historial")
-    public ResponseEntity<List<CursoDTO.GuiaResponse>> consultarHistorial(
+    public ResponseEntity<List<CursoDTO.CursoResponse>> consultarHistorial(
             @RequestParam(required = false) String instructor,
             @RequestParam(required = false)
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fecha) {
-        List<CursoDTO.GuiaResponse> historial = service.consultarHistorial(instructor, fecha);
+        List<CursoDTO.CursoResponse> historial = service.consultarHistorial(instructor, fecha);
         return ResponseEntity.ok(historial);
     }
 
