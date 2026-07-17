@@ -11,13 +11,13 @@ import java.util.Optional;
 @Repository
 public interface CursoRepository extends JpaRepository<Curso, Long> {
 
-    Optional<Curso> findByNumeroGuia(String codigoCurso);
+    Optional<Curso> findByCodigoCurso(String codigoCurso);
 
-    List<Curso> findByTransportista(String instructor);
+    List<Curso> findByInstructor(String instructor);
 
-    List<Curso> findByFechaDespacho(LocalDate fecha);
+    List<Curso> findByFechaInicio(LocalDate fecha);
 
-    List<Curso> findByTransportistaAndFechaDespacho(String instructor, LocalDate fecha);
+    List<Curso> findByInstructorAndFechaInicio(String instructor, LocalDate fecha);
 
-    boolean existsByNumeroGuia(String codigoCurso);
+    boolean existsByCodigoCurso(String codigoCurso);
 }

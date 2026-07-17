@@ -144,11 +144,11 @@ public class CursoService {
         List<Curso> guias;
 
         if (instructor != null && fecha != null) {
-            guias = repository.findByTransportistaAndFechaDespacho(instructor, fecha);
+            guias = repository.findByInstructorAndFechaInicio(instructor, fecha);
         } else if (instructor != null) {
-            guias = repository.findByTransportista(instructor);
+            guias = repository.findByInstructor(instructor);
         } else if (fecha != null) {
-            guias = repository.findByFechaDespacho(fecha);
+            guias = repository.findByFechaInicio(fecha);
         } else {
             guias = repository.findAll();
         }
@@ -166,7 +166,7 @@ public class CursoService {
     }
 
     private Curso obtenerPorNumero(String codigoCurso) {
-        return repository.findByNumeroGuia(codigoCurso)
+        return repository.findByCodigoCurso(codigoCurso)
                 .orElseThrow(() -> new RuntimeException("Guía no encontrada: " + codigoCurso));
     }
 }
