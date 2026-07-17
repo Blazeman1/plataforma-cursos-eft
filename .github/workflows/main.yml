@@ -99,7 +99,7 @@ jobs:
             docker rm plataforma-cursos 2>/dev/null || true
 
             echo "=== Descargando imagen ==="
-            docker pull ${{ env.DOCKER_IMAGE }}:latest
+            docker pull ${{ secrets.DOCKERHUB_USERNAME }}/plataforma-cursos:latest
 
             echo "=== Levantando Spring Boot ==="
             docker run -d \
@@ -118,7 +118,7 @@ jobs:
               -e RABBITMQ_PORT=5672 \
               -e RABBITMQ_USER=guest \
               -e RABBITMQ_PASS=guest \
-              ${{ env.DOCKER_IMAGE }}:latest
+              ${{ secrets.DOCKERHUB_USERNAME }}/plataforma-cursos:latest
 
             echo "=== Esperando startup (60s) ==="
             sleep 60
